@@ -7,5 +7,8 @@ void shell_history(int a); // a for arrow
 void shell_buffer_pos_increment(void);
 void shell_buffer_pos_decrement(void);
 void shell_render_prompt(void);
+void shell_home(void);
+void shell_end(void);
+void shell_delete(void);
 
 #endif

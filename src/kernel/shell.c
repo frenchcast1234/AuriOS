@@ -25,7 +25,7 @@ static void shell_insert_completion(const char *text, int len, int add_space);
 
 static const char *command_list[] = {
     "help", "fetch", "clear", "uptime", "memdump", "memtest", "mia",
-    "mmap", "peek",  "poke",  "echo",  "reboot",  "exit",   "crash", "setprompt", NULL};
+    "mmap", "peek",  "poke",  "echo",  "reboot",  "exit",   "crash", "setprompt", "keyboard", NULL};
 
 void shell_init(void) {
   memset(buffer, 0, BUFFER_SIZE);
@@ -124,6 +124,8 @@ static void shell_execute(char *cmd) {
     memtest();
   } else if (strcmp(cmd_name, "setprompt") == 0) {
     setprompt(args, argc);
+  } else if (strcmp(cmd_name, "keyboard") == 0) {
+    keyboard(args, argc);
   } else {
     terminal_writestring("command not found: ");
     terminal_writestring(cmd_name);
@@ -276,4 +278,23 @@ void shell_buffer_pos_increment(void) {
   if (buffer_pos >= (int) strlen(buffer)) return;
   buffer_pos++;
   terminal_move_cursor(1);
+}
+
+void shell_home(void) {
+  terminal_move_cursor(-buffer_pos);
+  buffer_pos = 0;
+}
+
+void shell_end(void) {
+  int offset = strlen(buffer) - buffer_pos;
+  buffer_pos += offset;
+  terminal_move_cursor(offset);
+}
+
+void shell_delete(void) {
+  if (buffer_pos + 1 > (int)strlen(buffer)) {
+    return;
+  }
+  shell_buffer_pos_increment();
+  shell_handle_key('\b');
 }
