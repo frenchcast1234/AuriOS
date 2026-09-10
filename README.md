@@ -192,6 +192,7 @@ AuriOS/
 │   │   ├── echo.c
 │   │   ├── fetch.c
 │   │   ├── help.c
+|   |   ├── keyboard_settings.c
 │   │   ├── memdump.c
 │   │   ├── memtest.c
 │   │   ├── mia.c
