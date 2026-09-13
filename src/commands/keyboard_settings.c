@@ -19,5 +19,4 @@ void keyboard(void *args, int argc) {
         terminal_writestring("index not valid");
         return;
     }
-    keyboard_set_current_keyboard(index);
 }

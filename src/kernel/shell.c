@@ -11,6 +11,9 @@
 #include "../include/timer.h"
 #include "../include/history.h"
 #include "../include/commands.h"
+#include "../include/isr.h"
+#include "../include/keyboard.h"
+#include "../include/pic.h"
 
 #define BUFFER_SIZE 256
 #define MAX_CMD_ARGS 16
@@ -27,7 +30,104 @@ static const char *command_list[] = {
     "help", "fetch", "clear", "uptime", "memdump", "memtest", "mia",
     "mmap", "peek",  "poke",  "echo",  "reboot",  "exit",   "crash", "setprompt", "keyboard", NULL};
 
+static int control = 0;
+static int shift = 0;
+static int capslock = 0;
+static int alt = 0;
+static char scancode_to_ascii[] = {
+  0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b',
+  '\t', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',
+  0, 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`',
+  0, '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0,
+  '*', 0, ' '
+};
+static char scancode_to_ascii_shift[128] = {
+  0, 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '\b',
+  '\t', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n',
+  0, 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', '~',
+  0, '|', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', 0,
+  '*', 0, ' '
+};
+
+static void shell_callback(registers_t *regs) {
+  (void)regs;
+  Key k = keyboard_get_current_key();
+  char c;
+  switch (k.key)
+  {
+  case KEY_CONTROL:
+    if (k.state == 0) 
+      control = 1;
+    else
+      control = 0;
+    break;
+  case KEY_SHIFT:
+    if (k.state == 0)
+      shift = 1;
+    else
+      shift = 0;
+    break;
+  case KEY_ALT:
+    if (k.state == 0)
+      alt = 1;
+    else
+      alt = 0;
+    break;
+  default:
+    break;
+  }
+  if (k.state != 0) return;
+  switch (k.key)
+  {
+  case KEY_CAPS_LOCK:
+    if (capslock == 0)
+      capslock = 1;
+    else
+      capslock = 0;
+    break;
+  case KEY_ARROW_UP:
+    shell_history(1);
+    break;
+  case KEY_ARROW_DOWN:
+    shell_history(2);
+    break;
+  case KEY_ARROW_LEFT:
+    if (alt)
+      shell_home();
+    else
+      shell_buffer_pos_decrement();
+    break;
+  case KEY_ARROW_RIGHT:
+    if (alt)
+      shell_end();
+    else
+      shell_buffer_pos_increment();
+    break;
+  case KEY_L:
+    if (control)
+      shell_handle_key('\f');
+    else
+      shell_handle_key(shift || capslock ? 'L' : 'l');
+    break;
+  case KEY_DELETE:
+    shell_delete();
+    break;
+  case KEY_NOTHING:
+    break;
+  default:
+    if (shift || capslock)
+      c = scancode_to_ascii_shift[k.key];
+    else
+      c = scancode_to_ascii[k.key];
+    if (c)
+      shell_handle_key(c);
+    break;
+  }
+}
+
 void shell_init(void) {
+  irq_register_handler(1, shell_callback);
+  pic_unmask_irq(1);
   memset(buffer, 0, BUFFER_SIZE);
   buffer_pos = 0;
   shell_render_prompt();
