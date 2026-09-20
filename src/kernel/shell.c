@@ -12,6 +12,7 @@
 #include "../include/history.h"
 #include "../include/commands.h"
 #include "../include/isr.h"
+#include "../include/keymap.h"
 #include "../include/keyboard.h"
 #include "../include/pic.h"
 
@@ -30,99 +31,31 @@ static const char *command_list[] = {
     "help", "fetch", "clear", "uptime", "memdump", "memtest", "mia",
     "mmap", "peek",  "poke",  "echo",  "reboot",  "exit",   "crash", "setprompt", "keyboard", NULL};
 
-static int control = 0;
-static int shift = 0;
-static int capslock = 0;
-static int alt = 0;
-static char scancode_to_ascii[] = {
-  0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b',
-  '\t', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',
-  0, 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`',
-  0, '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0,
-  '*', 0, ' '
-};
-static char scancode_to_ascii_shift[128] = {
-  0, 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '\b',
-  '\t', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n',
-  0, 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', '~',
-  0, '|', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', 0,
-  '*', 0, ' '
-};
-
 static void shell_callback(registers_t *regs) {
   (void)regs;
-  Key k = keyboard_get_current_key();
-  char c;
-  switch (k.key)
-  {
-  case KEY_CONTROL:
-    if (k.state == 0) 
-      control = 1;
-    else
-      control = 0;
-    break;
-  case KEY_SHIFT:
-    if (k.state == 0)
-      shift = 1;
-    else
-      shift = 0;
-    break;
-  case KEY_ALT:
-    if (k.state == 0)
-      alt = 1;
-    else
-      alt = 0;
-    break;
-  default:
-    break;
-  }
-  if (k.state != 0) return;
-  switch (k.key)
-  {
-  case KEY_CAPS_LOCK:
-    if (capslock == 0)
-      capslock = 1;
-    else
-      capslock = 0;
-    break;
-  case KEY_ARROW_UP:
+
+  const char* p = keymap_parse(keyboard_get_current_key());
+
+  if (strcmp(p, "") == 0) return;
+
+  if (strcmp(p, "^[[A") == 0) 
     shell_history(1);
-    break;
-  case KEY_ARROW_DOWN:
+  else if (strcmp(p, "^[[B") == 0)
     shell_history(2);
-    break;
-  case KEY_ARROW_LEFT:
-    if (alt)
-      shell_home();
-    else
-      shell_buffer_pos_decrement();
-    break;
-  case KEY_ARROW_RIGHT:
-    if (alt)
-      shell_end();
-    else
-      shell_buffer_pos_increment();
-    break;
-  case KEY_L:
-    if (control)
-      shell_handle_key('\f');
-    else
-      shell_handle_key(shift || capslock ? 'L' : 'l');
-    break;
-  case KEY_DELETE:
+  else if (strcmp(p, "^[[C") == 0)
+    shell_buffer_pos_increment();
+  else if (strcmp(p, "^[[D") == 0)
+    shell_buffer_pos_decrement();
+  else if (strcmp(p, "^[[E") == 0)
+    shell_home();
+  else if (strcmp(p, "^[[F") == 0)
+    shell_end();
+  else if (strcmp(p, "^[[2~") == 0)
     shell_delete();
-    break;
-  case KEY_NOTHING:
-    break;
-  default:
-    if (shift || capslock)
-      c = scancode_to_ascii_shift[k.key];
-    else
-      c = scancode_to_ascii[k.key];
-    if (c)
-      shell_handle_key(c);
-    break;
-  }
+  else if (strcmp(p, "^L") == 0)
+    shell_handle_key("\f");
+  else
+    shell_handle_key(p);
 }
 
 void shell_init(void) {
@@ -309,19 +242,20 @@ static void shell_insert_completion(const char *text, int len, int add_space) {
   }
 }
 
-void shell_handle_key(char c) {
-  if (c == 0x0C) {
-    terminal_clear();
-    buffer_pos = 0;
-    shell_init();
-    return;
-  } if (c == '\n') {
+void shell_handle_key(const char* c) {
+  // if (c == 0x0C) {
+  //   terminal_clear();
+  //   buffer_pos = 0;
+  //   shell_init();
+  //   return;
+  // } 
+  if (strcmp(c, "\n") == 0) {
     terminal_putchar('\n');
     shell_execute(buffer);
     buffer[0] = '\0';
     buffer_pos = 0;
     shell_render_prompt();
-  } else if (c == '\b') {
+  } else if (strcmp(c, "\b") == 0) {
     if (buffer_pos > 0) {
       int len = (int) strlen(buffer);
       int tail = len - buffer_pos; 
@@ -333,7 +267,7 @@ void shell_handle_key(char c) {
       terminal_putchar(' ');
       terminal_move_cursor(-(tail + 1));
     }
-  } else if (c == '\t') {
+  } else if (strcmp(c, "\t") == 0) {
     command_completion();
   } else {
     int len = (int) strlen(buffer);
@@ -344,7 +278,7 @@ void shell_handle_key(char c) {
       for (int x = len; x > buffer_pos; x--)
         buffer[x] = buffer[x - 1];
 
-      buffer[buffer_pos] = c;
+      buffer[buffer_pos] = c[0];
       buffer[len + 1] = '\0';
       terminal_writestring(&buffer[buffer_pos]);
       buffer_pos++;
@@ -396,5 +330,5 @@ void shell_delete(void) {
     return;
   }
   shell_buffer_pos_increment();
-  shell_handle_key('\b');
+  shell_handle_key("\b");
 }

@@ -112,60 +112,30 @@ Key keyboard_get_current_key() {
     }
     if (extended) {
         extended = 0;
-        switch (scancode)
-        {
-        case 0x48:
+        if (scancode == 0x48 || scancode == 0xc8) {
             k.key = KEY_ARROW_UP;
-            k.state = 0;
-            break;
-        case 0xc8:
-            k.key = KEY_ARROW_UP;
-            k.state = 1;
-            break;
-        case 0x50:
+            k.state = scancode == 0x48 ? PRESSED : RELEASED;
+        } else if (scancode == 0x50 || scancode == 0xd0) {
             k.key = KEY_ARROW_DOWN;
-            k.state = 0;
-            break;
-        case 0xd0:
-            k.key = KEY_ARROW_DOWN;
-            k.state = 1;
-            break;
-        case 0x4b:
+            k.state = scancode == 0x50 ? PRESSED : RELEASED;
+        } else if (scancode == 0x4b || scancode == 0xcb) {
             k.key = KEY_ARROW_LEFT;
-            k.state = 0;
-            break;
-        case 0xcb:
-            k.key = KEY_ARROW_LEFT;
-            k.state = 1;
-            break;
-        case 0x4d:
+            k.state = scancode == 0x4b ? PRESSED : RELEASED;
+        } else if (scancode == 0x4d || scancode == 0xcd) {
             k.key = KEY_ARROW_RIGHT;
-            k.state = 0;
-            break;
-        case 0xcd:
-            k.key = KEY_ARROW_RIGHT;
-            k.state = 1;
-            break;
-        case 0x53:
+            k.state = scancode == 0x4d ? PRESSED : RELEASED;
+        } else if (scancode == 0x53 || scancode == 0xd3) {
             k.key = KEY_DELETE;
-            k.state = 0;
-            break;
-        case 0xd3:
-            k.key = KEY_DELETE;
-            k.state = 1;
-            break;
-        default:
+            k.state = scancode == 0x53 ? PRESSED : RELEASED;
+        } else {
             k.key = KEY_NOTHING;
-            break;
+            k.key = PRESSED; 
         }
         return k;
     }
 
     k.key = keys_table[scancode & 0x7f];
-    if (k.key == KEY_NOTHING)
-        k.state = 2;
-    else
-        k.state = (scancode & 0x80) ? 1 : 0;
+    k.state = (scancode & 0x80) ? 1 : 0;
 
     return k;
 }

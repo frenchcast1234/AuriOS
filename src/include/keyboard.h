@@ -99,9 +99,13 @@ typedef enum {
     KEY_ARROW_RIGHT,
     KEY_DELETE
 } Keys;
+typedef enum {
+    PRESSED,
+    RELEASED
+} State;
 typedef struct {
     Keys key;
-    uint8_t state; // Pressed=0, released=1, nothing=2
+    State state;
 } Key;
 void keyboard_init(void);
 Key keyboard_get_current_key(void);

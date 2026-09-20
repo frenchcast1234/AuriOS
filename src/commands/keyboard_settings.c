@@ -2,6 +2,7 @@
 #include "../include/commands.h"
 #include "../include/terminal.h"
 #include "../include/integer.h"
+#include "../include/keymap.h"
 
 int max_index = 1;
 
@@ -19,4 +20,6 @@ void keyboard(void *args, int argc) {
         terminal_writestring("index not valid");
         return;
     }
+
+    keymap_set_index(index);
 }
