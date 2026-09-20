@@ -129,7 +129,7 @@ Key keyboard_get_current_key() {
             k.state = scancode == 0x53 ? PRESSED : RELEASED;
         } else {
             k.key = KEY_NOTHING;
-            k.key = PRESSED; 
+            k.state = PRESSED; 
         }
         return k;
     }
