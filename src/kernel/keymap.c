@@ -45,10 +45,10 @@ static const char* scancode_to_ascii_shift[8][128] = {
     }
 };
 
-const char* keymap_parse(Key scancode) {
+const char* keymap_parse(Key key) {
     static char pchar[MAX_PARSED_CHAR_LENGTH];
-    Keys k = scancode.key;
-    State s = scancode.state;
+    Keys k = key.key;
+    State s = key.state;
 
     pchar[0] = '\0';
 
@@ -61,7 +61,7 @@ const char* keymap_parse(Key scancode) {
     } else if (k == KEY_ALT) {
         alt = !s;
         return "";
-    } else if (scancode.state == PRESSED) {
+    } else if (key.state == PRESSED) {
         if (k == KEY_ARROW_UP) {
             strlcpy(pchar, "^[[A", sizeof(pchar));
         } else if (k == KEY_ARROW_DOWN) {

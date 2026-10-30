@@ -10,5 +10,5 @@ void shell_render_prompt(void);
 void shell_home(void);
 void shell_end(void);
 void shell_delete(void);
-
+void shell_parse_key(const char *p);
 #endif

@@ -31,11 +31,7 @@ static const char *command_list[] = {
     "help", "fetch", "clear", "uptime", "memdump", "memtest", "mia",
     "mmap", "peek",  "poke",  "echo",  "reboot",  "exit",   "crash", "setprompt", "keyboard", NULL};
 
-static void shell_callback(registers_t *regs) {
-  (void)regs;
-
-  const char* p = keymap_parse(keyboard_get_current_key());
-
+void shell_parse_key(const char* p) {
   if (strcmp(p, "") == 0) return;
 
   if (strcmp(p, "^[[A") == 0) 
@@ -56,6 +52,14 @@ static void shell_callback(registers_t *regs) {
     shell_handle_key("\f");
   else
     shell_handle_key(p);
+}
+
+static void shell_callback(registers_t *regs) {
+  (void)regs;
+
+  const char* p = keymap_parse(keyboard_get_current_key());
+
+  shell_parse_key(p);
 }
 
 void shell_init(void) {
