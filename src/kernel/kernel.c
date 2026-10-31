@@ -188,8 +188,8 @@ void kernel_main(uint32_t magic, multiboot_info_t *mboot_ptr) {
   terminal_clear();
   animate_logo();
   sleep(2000);
-  keyboard_init();
   terminal_clear();
+  keyboard_init();
   shell_init();
   KINFO("[KRN] Boot sequence complete. System ready.");
 

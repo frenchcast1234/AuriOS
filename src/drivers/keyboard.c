@@ -127,6 +127,18 @@ Key keyboard_get_current_key() {
         } else if (scancode == 0x53 || scancode == 0xd3) {
             k.key = KEY_DELETE;
             k.state = scancode == 0x53 ? PRESSED : RELEASED;
+        } else if (scancode == 0x47 || scancode == 0xc7) {
+            k.key = KEY_HOME;
+            k.state = scancode == 0x47 ? PRESSED : RELEASED;
+        } else if (scancode == 0x4f || scancode == 0xcf) {
+            k.key = KEY_END;
+            k.state = scancode == 0x4f ? PRESSED : RELEASED;
+        } else if (scancode == 0x49 || scancode == 0xc9) {
+            k.key = KEY_PAGE_UP;
+            k.state = scancode == 0x49 ? PRESSED : RELEASED;
+        } else if (scancode == 0x51 || scancode == 0xd1) {
+            k.key = KEY_PAGE_DOWN;
+            k.state = scancode == 0x51 ? PRESSED : RELEASED;
         } else {
             k.key = KEY_NOTHING;
             k.state = PRESSED; 

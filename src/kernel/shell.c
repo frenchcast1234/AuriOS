@@ -42,14 +42,30 @@ void shell_parse_key(const char* p) {
     shell_buffer_pos_increment();
   else if (strcmp(p, "^[[D") == 0)
     shell_buffer_pos_decrement();
-  else if (strcmp(p, "^[[E") == 0)
+  else if (strcmp(p, "^[[H") == 0)
     shell_home();
   else if (strcmp(p, "^[[F") == 0)
     shell_end();
-  else if (strcmp(p, "^[[2~") == 0)
+  else if (strcmp(p, "^[[3~") == 0)
     shell_delete();
+  else if (strcmp(p, "^[[5~") == 0)
+    terminal_scroll_view(24);
+  else if (strcmp(p, "^[[6~") == 0)
+    terminal_scroll_view(-24);
   else if (strcmp(p, "^L") == 0)
-    shell_handle_key("\f");
+  {
+    terminal_clear();
+    shell_render_prompt();
+    terminal_writestring(buffer);
+    terminal_move_cursor(buffer_pos - (int)strlen(buffer));
+  }
+  else if (strcmp(p, "^C") == 0)
+  {
+    terminal_putchar('\n');
+    memset(buffer, 0, BUFFER_SIZE);
+    buffer_pos = 0;
+    shell_render_prompt();
+  }
   else
     shell_handle_key(p);
 }
@@ -64,10 +80,10 @@ static void shell_callback(registers_t *regs) {
 
 void shell_init(void) {
   irq_register_handler(1, shell_callback);
-  pic_unmask_irq(1);
   memset(buffer, 0, BUFFER_SIZE);
   buffer_pos = 0;
   shell_render_prompt();
+  pic_unmask_irq(1);
 }
 
 static int shell_parse(char *cmd, char **args) {
@@ -247,19 +263,14 @@ static void shell_insert_completion(const char *text, int len, int add_space) {
 }
 
 void shell_handle_key(const char* c) {
-  // if (c == 0x0C) {
-  //   terminal_clear();
-  //   buffer_pos = 0;
-  //   shell_init();
-  //   return;
-  // } 
   if (strcmp(c, "\n") == 0) {
     terminal_putchar('\n');
     shell_execute(buffer);
     buffer[0] = '\0';
     buffer_pos = 0;
     shell_render_prompt();
-  } else if (strcmp(c, "\b") == 0) {
+  } 
+  else if (strcmp(c, "\b") == 0) {
     if (buffer_pos > 0) {
       int len = (int) strlen(buffer);
       int tail = len - buffer_pos; 
@@ -271,9 +282,11 @@ void shell_handle_key(const char* c) {
       terminal_putchar(' ');
       terminal_move_cursor(-(tail + 1));
     }
-  } else if (strcmp(c, "\t") == 0) {
+  } 
+  else if (strcmp(c, "\t") == 0) {
     command_completion();
-  } else {
+  } 
+  else {
     int len = (int) strlen(buffer);
 
     if(len < BUFFER_SIZE - 1) {

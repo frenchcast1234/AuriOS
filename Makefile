@@ -147,7 +147,7 @@ run: $(KERNEL_BIN)
 	else \
 		$(MAKE) iso; \
 		echo "Starting QEMU on Linux (x86_64)..."; \
-		qemu-system-x86_64 -cdrom $(ISO) -m 512M -boot d -vga std -serial stdio; \
+		qemu-system-x86_64 -cdrom $(ISO) -m 512M -boot d -vga std -serial stdio -display gtk,zoom-to-fit=on; \
 	fi
 
 # Clean build artifacts

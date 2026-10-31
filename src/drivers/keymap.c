@@ -21,9 +21,9 @@ static const char* scancode_to_ascii[8][128] = {
         "*", 0, " "
     },
     {
-        0, 0, "&", "é", "\"", "'", "(", "-", "è", "_", "ç", "à", ")", "=", "\b",
+        0, 0, "&", "e", "@", "'", "(", "-", "e", "_", "c", "a", ")", "=", "\b",
         "\t", "a", "z", "e", "r", "t", "y", "u", "i", "o", "p", "^", "$", "\n",
-        0, "q", "s", "d", "f", "g", "h", "j", "k", "l", "m", "ù", 0,
+        0, "q", "s", "d", "f", "g", "h", "j", "k", "l", "m", "u", 0,
         0, "*", "w", "x", "c", "v", "b", "n", ",", ";", ":", "!", 0,
         0, 0, " "
     }
@@ -31,14 +31,14 @@ static const char* scancode_to_ascii[8][128] = {
 static const char* scancode_to_ascii_shift[8][128] = {
     {
         0, 0, "!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "_", "+", "\b",
-        "\t", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "{", "}", "\n",
+        "\t", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "[", "]", "\n",
         0, "A", "S", "D", "F", "G", "H", "J", "K", "L", ":", "\"", "~",
         0, "|", "Z", "X", "C", "V", "B", "N", "M", "<", ">", "?", 0,
         "*", 0, " "
     },
     {
         0, 0, "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", 0, "+", "\b",   // ° not allowed
-        "\t", "A", "Z", "E", "R", "T", "Y", "U", "I", "O", "P", 0, "£", "\n",   // ¨ not allowed
+        "\t", "A", "Z", "E", "R", "T", "Y", "U", "I", "O", "P", 0, "$", "\n",   // ¨ not allowed
         0, "Q", "S", "D", "F", "G", "H", "J", "K", "L", "M", "%", 0,
         0, 0, "W", "X", "C", "V", "B", "N", "?", ".", "/", 0, 0, // µ and § not allowed
         0, 0, " "
@@ -70,15 +70,25 @@ const char* keymap_parse(Key key) {
             strlcpy(pchar, alt ? "^[[F" : "^[[C", sizeof(pchar)); // END : RIGHT
         } else if (k == KEY_ARROW_LEFT) {
             strlcpy(pchar, alt ? "^[[E" : "^[[D", sizeof(pchar)); // HOME : LEFT
+        } else if (k == KEY_HOME) {
+            strlcpy(pchar, "^[[H", sizeof(pchar));
+        } else if (k == KEY_END) {
+            strlcpy(pchar, "^[[F", sizeof(pchar));
+        } else if (k == KEY_PAGE_UP) {
+            strlcpy(pchar, "^[[5~", sizeof(pchar));
+        } else if (k == KEY_PAGE_DOWN) {
+            strlcpy(pchar, "^[[6~", sizeof(pchar));
         } else if (k == KEY_CAPS_LOCK) {
             capslock = !capslock;
         } else if (k == KEY_DELETE) {
-            strlcpy(pchar, "^[[2~", sizeof(pchar));
+            strlcpy(pchar, "^[[3~", sizeof(pchar));
+        } else if (control && k == KEY_C) {
+            strlcpy(pchar, "^C", sizeof(pchar));
+        } else if (control && k == KEY_L) {
+            strlcpy(pchar, "^L", sizeof(pchar));
         } else if (shift || capslock) {
             const char* mapped = scancode_to_ascii_shift[index][k];
             if (mapped) strlcpy(pchar, mapped, sizeof(pchar));
-        } else if (control && k == KEY_L) {
-            strlcpy(pchar, "^L", sizeof(pchar));
         } else {
             const char* mapped = scancode_to_ascii[index][k];
             if (mapped) strlcpy(pchar, mapped, sizeof(pchar));
